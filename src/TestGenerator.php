@@ -44,6 +44,65 @@
 namespace SebastianBergmann\PHPUnit\SkeletonGenerator;
 
 /**
+ * Storage for a test method
+ */
+class TestMethod {
+    const INCOMPLETE = 0;
+    const COMPLETE = 1;
+    /**
+     * Name of method
+     * @var string
+     */
+    private $name;
+    
+    /**
+     * @var integer
+     */
+    private $type = 0;
+    
+    /**
+     * @var string
+     */
+    private $code;
+    
+    /**
+     * 
+     * @param string $name
+     * @param integer $type
+     * @param string $code
+     */
+    public function __construct($name, $type = TestMethod::INCOMPLETE, $code = '') {
+        $this->name = $name;
+        $this->type = $type;
+        $this->code = $code;
+    }
+
+    /**
+     * The function name
+     * @return string
+     */
+    public function getName() {
+        return $this->name;
+    }
+
+    /**
+     * Returns TestMethod::INCOMPLETE or TestMethod::COMPLETE
+     * @return integer
+     */
+    public function getType() {
+        return $this->type;
+    }
+
+    /**
+     * PHP Method Code
+     * @return string
+     */
+    public function getCode() {
+        return $this->code;
+    }
+}
+
+/**
  * Generator for test class skeletons from classes.
  *
  * @author     Sebastian Bergmann <sebastian@phpunit.de>
@@ -159,6 +218,55 @@ class TestGenerator extends AbstractGenerator
         $incompleteMethods = '';
 
         foreach ($class->getMethods() as $method) {
+            $testMethods = $this->generateTestMethods($method);
+
+            foreach($testMethods as $testMethod) {
+                if ($testMethod->getType() == TestMethod::COMPLETE) {
+                    $methods .= $testMethod->getCode();
+                } else {
+                    $incompleteMethods .= $testMethod->getCode();
+                }
+            }
+        }
+        
+        $classTemplate = new \Text_Template(
+            sprintf(
+                '%s%stemplate%sTestClass.tpl',
+                __DIR__,
+                DIRECTORY_SEPARATOR,
+                DIRECTORY_SEPARATOR
+            )
+        );
+
+        if ($this->outClassName['namespace'] != '') {
+            $namespace = "\nnamespace " .
+                $this->outClassName['namespace'] . ";\n";
+        } else {
+            $namespace = '';
+        }
+
+        $classTemplate->setVar(
+            array(
+                'namespace'          => $namespace,
+                'namespaceSeparator' => !empty($namespace) ? '\\' : '',
+                'className'          => $this->inClassName['className'],
+                'testClassName'      => $this->outClassName['className'],
+                'methods'            => $methods . $incompleteMethods,
+                'date'               => date('Y-m-d'),
+                'time'               => date('H:i:s')
+            )
+        );
+
+        return $classTemplate->render();
+    }
+    
+    /**
+     * Generates test method code for a class method, may return empty array.
+     * @param \ReflectionMethod $method
+     * @return TestMethod[] Possible test methods 
+     */
+    public function generateTestMethods(\ReflectionMethod $method) {
+        $testMethods = array();
             if (!$method->isConstructor() &&
                 !$method->isAbstract() &&
                 $method->isPublic() &&
@@ -270,9 +378,14 @@ class TestGenerator extends AbstractGenerator
                                     'methodName'     => $methodName
                                 )
                             );
-
-                            $methods .= $methodTemplate->render();
-
+                            
+                            $testMethod = new TestMethod(
+                                'test'.$methodName, 
+                                TestMethod::COMPLETE,
+                                $methodTemplate->render()
+                            );
+                            $testMethods[$testMethod->getName()] = $testMethod;
+                            
                             $assertAnnotationFound = true;
                         }
                     }
@@ -295,40 +408,16 @@ class TestGenerator extends AbstractGenerator
                             'origMethodName' => $method->getName()
                         )
                     );
-
-                    $incompleteMethods .= $methodTemplate->render();
+                    
+                    $testMethod = new TestMethod(
+                        'test'.ucfirst($method->getName()),
+                        TestMethod::INCOMPLETE,
+                        $methodTemplate->render()
+                    );
+                    $testMethods[$testMethod->getName()] = $testMethod;
+                    
                 }
             }
-        }
-
-        $classTemplate = new \Text_Template(
-            sprintf(
-                '%s%stemplate%sTestClass.tpl',
-                __DIR__,
-                DIRECTORY_SEPARATOR,
-                DIRECTORY_SEPARATOR
-            )
-        );
-
-        if ($this->outClassName['namespace'] != '') {
-            $namespace = "\nnamespace " .
-                $this->outClassName['namespace'] . ";\n";
-        } else {
-            $namespace = '';
-        }
-
-        $classTemplate->setVar(
-            array(
-                'namespace'          => $namespace,
-                'namespaceSeparator' => !empty($namespace) ? '\\' : '',
-                'className'          => $this->inClassName['className'],
-                'testClassName'      => $this->outClassName['className'],
-                'methods'            => $methods . $incompleteMethods,
-                'date'               => date('Y-m-d'),
-                'time'               => date('H:i:s')
-            )
-        );
-
-        return $classTemplate->render();
+        return $testMethods;       
     }
 }
