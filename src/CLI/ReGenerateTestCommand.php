@@ -42,58 +42,39 @@
 
 namespace SebastianBergmann\PHPUnit\SkeletonGenerator\CLI;
 
-use SebastianBergmann\Version;
-use Symfony\Component\Console\Application as AbstractApplication;
+use SebastianBergmann\PHPUnit\SkeletonGenerator\TestReGenerator;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\ArgvInput;
-use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Input\ArrayInput;
 
 /**
- * TextUI frontend for PHPUnit Skeleton Generator.
- *
  * @author    Sebastian Bergmann <sebastian@phpunit.de>
- * @copyright 2009-2014 Sebastian Bergmann <sebastian@phpunit.de>
+ * @copyright 2012-2014 Sebastian Bergmann <sebastian@phpunit.de>
  * @license   http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
  * @link      http://github.com/sebastianbergmann/phpunit-skeleton-generator/tree
- * @since     Class available since Release 2.0.0
+ *
  */
-class Application extends AbstractApplication
+class ReGenerateTestCommand extends GenerateTestCommand
 {
-    public function __construct()
+    /**
+     * Configures the current command.
+     */
+    protected function configure()
     {
-        $version = new Version('2.0.1', dirname(dirname(__DIR__)));
-        parent::__construct('phpunit-skelgen', $version->getVersion());
-
-        $this->add(new GenerateClassCommand);
-        $this->add(new GenerateTestCommand);
-        $this->add(new ReGenerateTestCommand);
+        parent::configure();
+        $this->setName('regenerate-test')
+             ->setDescription('Generate or modify a test class based on a class');
     }
 
     /**
-     * Runs the current application.
-     *
-     * @param InputInterface  $input  An Input instance
-     * @param OutputInterface $output An Output instance
-     *
-     * @return integer 0 if everything went fine, or an error code
+     * @param InputInterface  $input  An InputInterface instance
+     * @return AbstractGenerator
      */
-    public function doRun(InputInterface $input, OutputInterface $output)
+    protected function getGenerator(InputInterface $input)
     {
-        if (!$input->hasParameterOption('--quiet')) {
-            $output->write(
-                sprintf(
-                    "phpunit-skelgen %s by Sebastian Bergmann.\n\n",
-                    $this->getVersion()
-                )
-            );
-        }
-
-        if ($input->hasParameterOption('--version') ||
-            $input->hasParameterOption('-V')) {
-            exit;
-        }
-
-        parent::doRun($input, $output);
+        return new TestReGenerator(
+            (string)$input->getArgument('class'),
+            (string)$input->getArgument('class-source'),
+            (string)$input->getArgument('test-class'),
+            (string)$input->getArgument('test-source')
+        );
     }
 }
