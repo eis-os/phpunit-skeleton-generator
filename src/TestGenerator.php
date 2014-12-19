@@ -323,7 +323,7 @@ class TestGenerator extends AbstractGenerator
                             );
                             
                             $testMethod = new TestMethod(
-                                'test'.$methodName, 
+                                null, 
                                 TestMethod::COMPLETE,
                                 $methodTemplate->render()
                             );
@@ -353,7 +353,7 @@ class TestGenerator extends AbstractGenerator
                     );
                     
                     $testMethod = new TestMethod(
-                        'test'.ucfirst($method->getName()),
+                        null,
                         TestMethod::INCOMPLETE,
                         $methodTemplate->render()
                     );

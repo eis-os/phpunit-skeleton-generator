@@ -68,11 +68,17 @@ class TestMethod {
     
     /**
      * 
-     * @param string $name
+     * @param string|null $name Name of function or null for auto detect by code
      * @param integer $type
      * @param string $code
      */
     public function __construct($name, $type = TestMethod::INCOMPLETE, $code = '') {
+        if ($name === null && $code !== '') {
+            $matches = array();
+            if (preg_match('/function\s+\&?([a-zA-Z0-9_\x{007f}-\x{00FF}]+)\s*\(/u', $code, $matches) === 1) {
+                $name = $matches[1];
+            }
+        }
         $this->name = $name;
         $this->type = $type;
         $this->code = $code;
