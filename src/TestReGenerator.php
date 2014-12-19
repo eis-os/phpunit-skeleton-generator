@@ -73,7 +73,24 @@ class TestReGenerator extends TestGenerator {
            $this->outSourceFileContent = file_get_contents($this->outSourceFile);
         }
     }
- 
+    
+    /**
+     * Regenerates the code and writes it to a source file if necessary
+     *
+     * @param string $file
+     */
+    public function write($file = '')
+    {
+        if ($file == '') {
+            $file = $this->outSourceFile;
+        }
+        $newcode = $this->generate();
+        if ($this->outSourceFileContent === $newcode) {
+            return;
+        }
+        file_put_contents($file, $newcode);
+    }
+    
     public function generate()
     {       
         $class = new \ReflectionClass(
@@ -122,6 +139,10 @@ class TestReGenerator extends TestGenerator {
                     $incompleteMethods .= $testMethod->getCode();
                 }
             }
+        }
+        
+        if ($methods == '' && $incompleteMethods == '') {
+            return $oldcode;
         }
         
         $lineEnding = "\n";
