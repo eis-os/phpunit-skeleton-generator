@@ -43,64 +43,7 @@
 
 namespace SebastianBergmann\PHPUnit\SkeletonGenerator;
 
-/**
- * Storage for a test method
- */
-class TestMethod {
-    const INCOMPLETE = 0;
-    const COMPLETE = 1;
-    /**
-     * Name of method
-     * @var string
-     */
-    private $name;
-    
-    /**
-     * @var integer
-     */
-    private $type = 0;
-    
-    /**
-     * @var string
-     */
-    private $code;
-    
-    /**
-     * 
-     * @param string $name
-     * @param integer $type
-     * @param string $code
-     */
-    public function __construct($name, $type = TestMethod::INCOMPLETE, $code = '') {
-        $this->name = $name;
-        $this->type = $type;
-        $this->code = $code;
-    }
 
-    /**
-     * The function name
-     * @return string
-     */
-    public function getName() {
-        return $this->name;
-    }
-
-    /**
-     * Returns TestMethod::INCOMPLETE or TestMethod::COMPLETE
-     * @return integer
-     */
-    public function getType() {
-        return $this->type;
-    }
-
-    /**
-     * PHP Method Code
-     * @return string
-     */
-    public function getCode() {
-        return $this->code;
-    }
-}
 
 /**
  * Generator for test class skeletons from classes.
